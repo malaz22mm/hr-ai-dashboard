@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { AlertTriangle, Gauge, Users } from 'lucide-react'
 import { StatsCard } from '@/components/StatsCard'
 import { ChartCard } from '@/components/ChartCard'
-import { EmployeeTable } from '@/components/EmployeeTable'
 import {
   fetchAlerts,
   fetchDashboardSnapshot,
@@ -12,7 +11,7 @@ import {
 import type { Alert, Employee, PerformancePoint } from '@/lib/types'
 
 export default function Dashboard() {
-  const [employees, setEmployees] = useState<Employee[]>([])
+  const [topEmployees, setTopEmployees] = useState<Employee[]>([])
   const [performanceSeries, setPerformanceSeries] = useState<PerformancePoint[]>([])
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [snapshot, setSnapshot] = useState({
@@ -25,15 +24,15 @@ export default function Dashboard() {
   useEffect(() => {
     let mounted = true
     const load = async () => {
-      const [employeeList, performance, alertFeed, stats] = await Promise.all([
-        fetchEmployees(),
+      const [employeePage, performance, alertFeed, stats] = await Promise.all([
+        fetchEmployees({ pageSize: 5, sort: { field: 'performanceScore', order: 'descend' } }),
         fetchPerformanceSeries(),
         fetchAlerts(),
         fetchDashboardSnapshot(),
       ])
 
       if (!mounted) return
-      setEmployees(employeeList)
+      setTopEmployees(employeePage.data)
       setPerformanceSeries(performance)
       setAlerts(alertFeed)
       setSnapshot(stats)
@@ -110,8 +109,29 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section>
-        <EmployeeTable employees={employees} subtitle="Top HR insights by person" />
+      <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-lg font-semibold text-slate-900">Top performers</p>
+            <p className="text-sm text-muted-foreground">Highest engagement scores this quarter</p>
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Updated daily</span>
+        </div>
+        <ul className="mt-4 divide-y divide-slate-100">
+          {topEmployees.map((employee) => (
+            <li key={employee.id} className="flex items-center justify-between py-3">
+              <div>
+                <p className="font-semibold text-slate-900">
+                  {employee.firstName} {employee.lastName}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {employee.role} · {employee.department}
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-slate-900">{employee.performanceScore}%</span>
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   )
