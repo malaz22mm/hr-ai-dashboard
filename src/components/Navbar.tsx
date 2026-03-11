@@ -1,4 +1,7 @@
-import { Menu, Search, Bell } from 'lucide-react'
+import { Menu, Search, Bell, LogOut } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Dropdown } from 'antd'
+import type { MenuProps } from 'antd'
 import { useAuthStore } from '@/hooks/useAuth'
 
 type NavbarProps = {
@@ -6,7 +9,27 @@ type NavbarProps = {
 }
 
 export function Navbar({ onMenuClick }: NavbarProps) {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'logout',
+      label: 'Logout',
+      icon: <LogOut className="h-4 w-4" />,
+      onClick: handleLogout,
+      danger: true,
+    },
+  ]
 
   return (
     <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -35,23 +58,24 @@ export function Navbar({ onMenuClick }: NavbarProps) {
             <Bell className="h-5 w-5" />
             <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500" />
           </button>
-          <div className="flex items-center gap-3 rounded-full border border-slate-200 px-3 py-1.5">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{user?.name ?? 'Guest'}</p>
-              <p className="text-xs text-slate-500">{user?.role ?? 'Visitor'}</p>
-            </div>
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 text-center text-sm font-bold leading-10 text-white">
-              {user?.name
-                ?.split(' ')
-                .map((chunk) => chunk[0])
-                .slice(0, 2)
-                .join('') ?? 'HR'}
-            </div>
-          </div>
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <button className="flex items-center gap-3 rounded-full border border-slate-200 px-3 py-1.5 transition hover:bg-slate-50">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{user?.email ?? user?.name ?? 'Guest'}</p>
+                <p className="text-xs text-slate-500">{user?.role ?? 'Visitor'}</p>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 text-center text-sm font-bold leading-10 text-white">
+                {user?.name
+                  ?.split(' ')
+                  .map((chunk) => chunk[0])
+                  .slice(0, 2)
+                  .join('')
+                  .toUpperCase() ?? (user?.email?.[0]?.toUpperCase() ?? 'HR')}
+              </div>
+            </button>
+          </Dropdown>
         </div>
       </div>
     </header>
   )
 }
-
-

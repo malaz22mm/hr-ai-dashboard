@@ -24,18 +24,27 @@ export default function Dashboard() {
   useEffect(() => {
     let mounted = true
     const load = async () => {
-      const [employeePage, performance, alertFeed, stats] = await Promise.all([
-        fetchEmployees({ pageSize: 5, sort: { field: 'performanceScore', order: 'descend' } }),
-        fetchPerformanceSeries(),
-        fetchAlerts(),
-        fetchDashboardSnapshot(),
-      ])
+      try {
+        const [employeePage, performance, alertFeed, stats] = await Promise.all([
+          fetchEmployees({
+            take: 5,
+            skip: 0,
+            sortBy: 'engagementScore',
+            sortOrder: 'desc',
+          }),
+          fetchPerformanceSeries(),
+          fetchAlerts(),
+          fetchDashboardSnapshot(),
+        ])
 
-      if (!mounted) return
-      setTopEmployees(employeePage.data)
-      setPerformanceSeries(performance)
-      setAlerts(alertFeed)
-      setSnapshot(stats)
+        if (!mounted) return
+        setTopEmployees(employeePage.data)
+        setPerformanceSeries(performance)
+        setAlerts(alertFeed)
+        setSnapshot(stats)
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error)
+      }
     }
 
     load()
@@ -122,13 +131,15 @@ export default function Dashboard() {
             <li key={employee.id} className="flex items-center justify-between py-3">
               <div>
                 <p className="font-semibold text-slate-900">
-                  {employee.firstName} {employee.lastName}
+                  {employee.jobRole} · {employee.department}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {employee.role} · {employee.department}
+                  Age: {employee.age} · Gender: {employee.gender}
                 </p>
               </div>
-              <span className="text-sm font-semibold text-slate-900">{employee.performanceScore}%</span>
+              <span className="text-sm font-semibold text-slate-900">
+                {employee.engagementScore}
+              </span>
             </li>
           ))}
         </ul>
@@ -136,5 +147,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
-

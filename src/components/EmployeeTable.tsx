@@ -5,7 +5,6 @@ import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
 import type { FilterDropdownProps, FilterValue, SorterResult } from 'antd/es/table/interface'
 import { SearchOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
-import dayjs from 'dayjs'
 import type { Employee } from '@/lib/types'
 
 type EmployeeTableProps = {
@@ -15,15 +14,15 @@ type EmployeeTableProps = {
   page: number;
   pageSize: number;
   filters: Record<string, FilterValue | null>;
-  selectedRowKeys: number[];
+  selectedRowKeys: string[];
   onChange: (
     pagination: TablePaginationConfig,
     filters: Record<string, FilterValue | null>,
     sorter: SorterResult<Employee> | SorterResult<Employee>[],
   ) => void;
   onEdit: (employee: Employee) => void;
-  onDelete: (id: number) => void;
-  onSelectChange: (selectedIds: number[]) => void;
+  onDelete: (id: string) => void;
+  onSelectChange: (selectedIds: string[]) => void;
 }
 
 export function EmployeeTable({
@@ -52,11 +51,38 @@ export function EmployeeTable({
 
   const roleFilters = useMemo(
     () =>
-      Array.from(new Set(data.map((employee) => employee.role))).map((role) => ({
+      Array.from(new Set(data.map((employee) => employee.jobRole))).map((role) => ({
         text: role,
         value: role,
       })),
     [data],
+  )
+
+  const genderFilters = useMemo(
+    () =>
+      Array.from(new Set(data.map((employee) => employee.gender))).map((gender) => ({
+        text: gender,
+        value: gender,
+      })),
+    [data],
+  )
+
+  const attritionRiskFilters = useMemo(
+    () =>
+      ['Low', 'Medium', 'High'].map((risk) => ({
+        text: risk,
+        value: risk,
+      })),
+    [],
+  )
+
+  const performanceRatingFilters = useMemo(
+    () =>
+      ['Low', 'Good', 'Excellent', 'Outstanding'].map((rating) => ({
+        text: rating,
+        value: rating,
+      })),
+    [],
   )
 
   const handleSearch = (confirm: FilterDropdownProps['confirm']) => {
@@ -108,61 +134,101 @@ export function EmployeeTable({
       title: 'ID',
       dataIndex: 'id',
       sorter: true,
-      width: 100,
+      width: 200,
       ...getTextColumnProps('id', 'ID'),
-      render: (value: number) => `EMP-${value.toString().padStart(3, '0')}`,
-    },
-    {
-      title: 'Full Name',
-      dataIndex: 'firstName',
-      width: 220,
-      key: 'fullName',
-      ...getTextColumnProps('fullName', 'full name'),
-      render: (_value, record) => (
-        <div>
-          <div className="font-medium text-slate-900">
-            {record.firstName} {record.lastName}
-          </div>
-          <div className="text-xs text-muted-foreground">{record.email}</div>
-        </div>
-      ),
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      width: 220,
-      ...getTextColumnProps('email'),
+      render: (value: string) => value.substring(0, 8) + '...',
     },
     {
       title: 'Department',
       dataIndex: 'department',
       filters: departmentFilters,
       filteredValue: filters.department ?? null,
+      width: 180,
     },
     {
-      title: 'Role',
-      dataIndex: 'role',
+      title: 'Job Role',
+      dataIndex: 'jobRole',
       filters: roleFilters,
-      filteredValue: filters.role ?? null,
+      filteredValue: filters.jobRole ?? null,
+      width: 200,
     },
     {
-      title: 'Hire Date',
-      dataIndex: 'hireDate',
-      sorter: true,
-      width: 140,
-      render: (value: string) => dayjs(value).format('MMM D, YYYY'),
+      title: 'Gender',
+      dataIndex: 'gender',
+      filters: genderFilters,
+      filteredValue: filters.gender ?? null,
+      width: 100,
     },
     {
-      title: 'Performance',
-      dataIndex: 'performanceScore',
+      title: 'Age',
+      dataIndex: 'age',
+      sorter: true,
+      width: 80,
+    },
+    {
+      title: 'Monthly Income',
+      dataIndex: 'monthlyIncome',
       sorter: true,
       width: 140,
-      render: (value: number) => <Tag color={value >= 85 ? 'success' : value >= 70 ? 'warning' : 'error'}>{value}%</Tag>,
+      render: (value: number) => `$${value.toLocaleString()}`,
+    },
+    {
+      title: 'Engagement Score',
+      dataIndex: 'engagementScore',
+      sorter: true,
+      width: 150,
+      render: (value: number) => (
+        <Tag color={value >= 85 ? 'success' : value >= 70 ? 'warning' : 'error'}>{value}</Tag>
+      ),
+    },
+    {
+      title: 'Performance Rating',
+      dataIndex: 'performanceRating',
+      filters: performanceRatingFilters,
+      filteredValue: filters.performanceRating ?? null,
+      width: 160,
+      render: (value: string) => (
+        <Tag
+          color={
+            value === 'Outstanding'
+              ? 'success'
+              : value === 'Excellent'
+                ? 'cyan'
+                : value === 'Good'
+                  ? 'blue'
+                  : 'default'
+          }
+        >
+          {value}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Attrition Risk',
+      dataIndex: 'attritionRiskClass',
+      filters: attritionRiskFilters,
+      filteredValue: filters.attritionRiskClass ?? null,
+      width: 130,
+      render: (value: string) => (
+        <Tag
+          color={
+            value === 'High' ? 'error' : value === 'Medium' ? 'warning' : 'success'
+          }
+        >
+          {value}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Years at Company',
+      dataIndex: 'yearsAtCompany',
+      sorter: true,
+      width: 150,
     },
     {
       title: 'Actions',
       key: 'actions',
-      width: 190,
+      width: 150,
       fixed: 'right',
       render: (_, record) => (
         <Space>
@@ -197,16 +263,15 @@ export function EmployeeTable({
         pageSize,
         total,
         showSizeChanger: true,
-        showTotal: (value) => `${value} employees`,
+        showTotal: (value, range) =>
+          `${range[0]}-${range[1]} of ${value} employees`,
       }}
       scroll={{ x: 'max-content' }}
       rowSelection={{
         selectedRowKeys,
-        onChange: (keys) => onSelectChange(keys as number[]),
+        onChange: (keys) => onSelectChange(keys as string[]),
       }}
       onChange={onChange}
     />
   )
 }
-
-

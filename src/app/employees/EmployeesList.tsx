@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Modal, Space, message } from 'antd'
 import type { FilterValue, SorterResult, TablePaginationConfig } from 'antd/es/table/interface'
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined, ClearOutlined } from '@ant-design/icons'
 import { EmployeeTable } from '@/components/EmployeeTable'
 import { AddEditEmployeeModal } from '@/components/AddEditEmployeeModal'
 import {
@@ -11,54 +11,135 @@ import {
   fetchEmployees,
   updateEmployee,
 } from '@/lib/api'
-import type { Employee, EmployeePayload, EmployeeSort } from '@/lib/types'
-
-const DEFAULT_DEPARTMENTS = ['People Operations', 'Sales', 'Analytics', 'Talent Acquisition', 'Product']
-const DEFAULT_ROLES = ['HR Director', 'People Partner', 'People Analyst', 'Recruiter', 'HRBP']
+import type { CreateEmployeeDto, Employee, EmployeesQueryParams, UpdateEmployeeDto } from '@/lib/types'
 
 type TableFiltersState = Record<string, FilterValue | null>
+
+// Map table filter keys to backend query parameter keys
+const FILTER_KEY_MAP: Record<string, keyof EmployeesQueryParams> = {
+  department: 'department',
+  jobRole: 'jobRole',
+  gender: 'gender',
+  attrition: 'attrition',
+  maritalStatus: 'maritalStatus',
+  businessTravel: 'businessTravel',
+  education: 'education',
+  educationField: 'educationField',
+  overTime: 'overTime',
+  attritionRiskClass: 'attritionRiskClass',
+  environmentSatisfaction: 'environmentSatisfaction',
+  jobInvolvement: 'jobInvolvement',
+  jobSatisfaction: 'jobSatisfaction',
+  performanceRating: 'performanceRating',
+  relationshipSatisfaction: 'relationshipSatisfaction',
+  workLifeBalance: 'workLifeBalance',
+}
 
 export default function EmployeesList() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(false)
   const [pagination, setPagination] = useState({ page: 1, pageSize: 10, total: 0 })
   const [tableFilters, setTableFilters] = useState<TableFiltersState>({})
-  const [sorter, setSorter] = useState<EmployeeSort>({})
-  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([])
+  const [sorter, setSorter] = useState<{ field?: string; order?: 'ascend' | 'descend' }>({})
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
 
-  const normalizeFilters = useCallback((filters: TableFiltersState) => {
-    const normalized: Partial<Record<'fullName' | keyof Employee, string | string[]>> = {}
-    Object.entries(filters).forEach(([key, value]) => {
-      if (!value || value.length === 0) return
-      normalized[key as 'fullName' | keyof Employee] =
-        value.length === 1 ? String(value[0]) : value.map((entry) => String(entry))
-    })
-    return normalized
-  }, [])
+  // Convert Ant Design table filters to backend query parameters
+  const buildQueryParams = useCallback(
+    (
+      page: number,
+      pageSize: number,
+      filters: TableFiltersState,
+      sort: { field?: string; order?: 'ascend' | 'descend' },
+    ): EmployeesQueryParams => {
+      const params: EmployeesQueryParams = {
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }
+
+      // Map sorting
+      if (sort.field && sort.order) {
+        params.sortBy = sort.field
+        params.sortOrder = sort.order === 'ascend' ? 'asc' : 'desc'
+      }
+
+      // Map filters - support multiple filters simultaneously
+      Object.entries(filters).forEach(([key, value]) => {
+        if (!value || (Array.isArray(value) && value.length === 0)) return
+
+        const mappedKey = FILTER_KEY_MAP[key]
+        if (mappedKey) {
+          // Single value or first value for enum fields
+          if (Array.isArray(value)) {
+            if (value.length === 1) {
+              ;(params as any)[mappedKey] = String(value[0])
+            } else {
+              // Multiple selections - use first one (backend supports single value)
+              ;(params as any)[mappedKey] = String(value[0])
+            }
+          } else {
+            ;(params as any)[mappedKey] = String(value)
+          }
+        }
+
+        // Handle range filters
+        if (key === 'age') {
+          if (Array.isArray(value) && value.length === 2) {
+            params.minAge = Number(value[0])
+            params.maxAge = Number(value[1])
+          }
+        }
+        if (key === 'monthlyIncome') {
+          if (Array.isArray(value) && value.length === 2) {
+            params.minMonthlyIncome = Number(value[0])
+            params.maxMonthlyIncome = Number(value[1])
+          }
+        }
+        if (key === 'jobLevel') {
+          if (Array.isArray(value) && value.length === 2) {
+            params.minJobLevel = Number(value[0])
+            params.maxJobLevel = Number(value[1])
+          }
+        }
+        if (key === 'engagementScore') {
+          if (Array.isArray(value) && value.length === 2) {
+            params.minEngagementScore = Number(value[0])
+            params.maxEngagementScore = Number(value[1])
+          }
+        }
+        if (key === 'yearsAtCompany') {
+          if (Array.isArray(value) && value.length === 2) {
+            params.minYearsAtCompany = Number(value[0])
+            params.maxYearsAtCompany = Number(value[1])
+          }
+        }
+      })
+
+      return params
+    },
+    [],
+  )
 
   const loadEmployees = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await fetchEmployees({
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-        filters: normalizeFilters(tableFilters),
-        sort: sorter.field ? sorter : undefined,
-      })
+      const queryParams = buildQueryParams(pagination.page, pagination.pageSize, tableFilters, sorter)
+      const response = await fetchEmployees(queryParams)
       setEmployees(response.data)
       setPagination((prev) => ({
         ...prev,
-        total: response.total,
+        total: response.meta.total,
       }))
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error)
-      message.error('Failed to load employees')
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to load employees'
+      message.error(errorMessage)
     } finally {
       setLoading(false)
     }
-  }, [normalizeFilters, pagination.page, pagination.pageSize, sorter, tableFilters])
+  }, [buildQueryParams, pagination.page, pagination.pageSize, sorter, tableFilters])
 
   useEffect(() => {
     loadEmployees()
@@ -77,68 +158,111 @@ export default function EmployeesList() {
     setTableFilters(filters)
 
     if (!Array.isArray(sorterResult)) {
-      const field = sorterResult.field as keyof Employee | undefined
+      const field = sorterResult.field as string | undefined
       const order = sorterResult.order ?? undefined
       setSorter(field ? { field, order } : {})
     }
   }
 
-  const handleModalSubmit = async (payload: EmployeePayload) => {
+  const handleModalSubmit = async (payload: CreateEmployeeDto) => {
     try {
       if (editingEmployee) {
-        await updateEmployee(editingEmployee.id, payload)
-        message.success('Employee updated')
+        const updatePayload: UpdateEmployeeDto = {
+          ...editingEmployee,
+          ...payload,
+        }
+        await updateEmployee(updatePayload)
+        message.success('Employee updated successfully')
       } else {
         await createEmployee(payload)
-        message.success('Employee created')
+        message.success('Employee created successfully')
       }
       setIsModalOpen(false)
       setEditingEmployee(null)
       await loadEmployees()
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error)
-      message.error('Unable to save employee')
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unable to save employee'
+      message.error(errorMessage)
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     try {
       await deleteEmployee(id)
-      message.success('Employee deleted')
+      message.success('Employee deleted successfully')
       setSelectedRowKeys((keys) => keys.filter((key) => key !== id))
       await loadEmployees()
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error)
-      message.error('Unable to delete employee')
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unable to delete employee'
+      message.error(errorMessage)
     }
   }
 
   const handleBulkDelete = () => {
     Modal.confirm({
       title: 'Delete selected employees',
-      content: `This will delete ${selectedRowKeys.length} employee(s).`,
+      content: `This will delete ${selectedRowKeys.length} employee(s). This action cannot be undone.`,
       okText: 'Delete',
       okType: 'danger',
       onOk: async () => {
         try {
           await deleteEmployeesBulk(selectedRowKeys)
-          message.success('Employees deleted')
+          message.success(`${selectedRowKeys.length} employee(s) deleted successfully`)
           setSelectedRowKeys([])
           await loadEmployees()
-        } catch (error) {
+        } catch (error: unknown) {
           console.error(error)
-          message.error('Unable to delete selected employees')
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unable to delete selected employees'
+          message.error(errorMessage)
         }
       },
     })
   }
 
+  const handleClearFilters = () => {
+    setTableFilters({})
+    setSorter({})
+    setPagination((prev) => ({ ...prev, page: 1 }))
+  }
+
+  const activeFilterCount = useMemo(() => {
+    return Object.values(tableFilters).filter((f) => f && f.length > 0).length
+  }, [tableFilters])
+
   const departmentOptions = useMemo(
-    () => Array.from(new Set([...DEFAULT_DEPARTMENTS, ...employees.map((employee) => employee.department)])).filter(Boolean),
+    () =>
+      Array.from(
+        new Set([
+          'Research & Development',
+          'Sales',
+          'Human Resources',
+          ...employees.map((e) => e.department),
+        ]),
+      ).filter(Boolean),
     [employees],
   )
+
   const roleOptions = useMemo(
-    () => Array.from(new Set([...DEFAULT_ROLES, ...employees.map((employee) => employee.role)])).filter(Boolean),
+    () =>
+      Array.from(
+        new Set([
+          'Sales Executive',
+          'Research Scientist',
+          'Laboratory Technician',
+          'Manufacturing Director',
+          'Healthcare Representative',
+          'Manager',
+          'Sales Representative',
+          'Research Director',
+          'Human Resources',
+          ...employees.map((e) => e.jobRole),
+        ]),
+      ).filter(Boolean),
     [employees],
   )
 
@@ -172,14 +296,19 @@ export default function EmployeesList() {
               disabled={selectedRowKeys.length === 0}
               onClick={handleBulkDelete}
             >
-              Delete selected
+              Delete selected ({selectedRowKeys.length})
             </Button>
+            {activeFilterCount > 0 && (
+              <Button icon={<ClearOutlined />} onClick={handleClearFilters}>
+                Clear filters ({activeFilterCount})
+              </Button>
+            )}
           </Space>
-          {selectedRowKeys.length > 0 ? (
+          {selectedRowKeys.length > 0 && (
             <span className="text-sm font-medium text-slate-500">
               {selectedRowKeys.length} selected
             </span>
-          ) : null}
+          )}
         </div>
 
         <EmployeeTable
@@ -214,4 +343,3 @@ export default function EmployeesList() {
     </div>
   )
 }
-
