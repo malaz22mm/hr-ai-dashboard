@@ -1,26 +1,22 @@
 import { Fragment } from 'react'
 import { NavLink } from 'react-router-dom'
 import {
-  AlertTriangle,
   LayoutDashboard,
-  LogIn,
   Settings2,
+  UserCog,
   Users2,
   FileBarChart2,
   X,
 } from 'lucide-react'
+import { useAuthStore } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 
 const navigation = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Employees', to: '/employees', icon: Users2 },
   { label: 'Reports', to: '/reports', icon: FileBarChart2 },
+  { label: 'Users', to: '/users', icon: UserCog, superAdminOnly: true },
   { label: 'Settings', to: '/settings', icon: Settings2 },
-]
-
-const supportLinks = [
-  { label: 'Alerts Center', to: '/reports', icon: AlertTriangle },
-  { label: 'Login', to: '/login', icon: LogIn },
 ]
 
 type SidebarProps = {
@@ -29,6 +25,9 @@ type SidebarProps = {
 }
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const role = useAuthStore((s) => s.role)
+  const links = navigation.filter((item) => !('superAdminOnly' in item && item.superAdminOnly) || role === 'SUPER_ADMIN')
+
   return (
     <Fragment>
       <div
@@ -63,33 +62,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto px-4">
           <p className="px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Overview</p>
           <ul className="mt-2 space-y-1">
-            {navigation.map((item) => (
+            {links.map((item) => (
               <li key={item.to}>
                 <NavLink
                   to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition',
-                      isActive
-                        ? 'bg-white/10 text-white shadow-inner shadow-white/10'
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white',
-                    )
-                  }
-                  onClick={onClose}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-
-          <p className="mt-6 px-2 text-xs font-semibold uppercase tracking-widest text-slate-500">Support</p>
-          <ul className="mt-2 space-y-1">
-            {supportLinks.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
+                  end={item.to === '/'}
                   className={({ isActive }) =>
                     cn(
                       'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition',
@@ -112,12 +89,10 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           <p className="text-xs uppercase tracking-widest text-slate-500">System Status</p>
           <div className="mt-2 rounded-xl border border-white/10 bg-white/5 p-3 text-sm">
             <p className="font-semibold text-white">All systems operational</p>
-            <p className="text-xs text-slate-400">SLA 99.9% this month</p>
+            <p className="text-xs text-slate-400">Connected to live API</p>
           </div>
         </div>
       </aside>
     </Fragment>
   )
 }
-
-

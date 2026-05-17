@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { message } from 'antd'
 import { useAuthStore } from '@/hooks/useAuth'
+import { getApiErrorMessage } from '@/lib/apiErrors'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -27,9 +28,7 @@ export default function Login() {
       message.success('Login successful')
       navigate('/')
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Login failed. Please check your credentials.'
-      message.error(errorMessage)
+      message.error(getApiErrorMessage(error, 'Login failed. Please check your credentials.'))
     } finally {
       setLoading(false)
     }
@@ -118,6 +117,12 @@ export default function Login() {
         >
           {loading ? 'Signing in...' : 'Continue'}
         </button>
+
+        <p className="mt-4 text-center text-sm text-slate-500">
+          <Link to="/forgot-password" className="underline">
+            Forgot password?
+          </Link>
+        </p>
       </form>
     </div>
   )

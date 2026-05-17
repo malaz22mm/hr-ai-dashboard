@@ -1,6 +1,7 @@
-// Backend Employee Entity Schema
+// UI employee model (mapped from live API snake_case + lookups)
 export interface Employee {
-  id: string; // UUID
+  id: string;
+  name: string;
   attrition: 'Yes' | 'No';
   age: number;
   gender: string;
@@ -56,6 +57,20 @@ export interface Employee {
   managerFeedbackScore: number;
   roleStabilityRatio: number;
   attritionRiskClass: 'Low' | 'Medium' | 'High';
+  /** Lookup FKs for create/update payloads */
+  departmentId?: number;
+  jobRoleId?: number;
+  attritionRiskClassId?: number;
+  educationId?: number;
+  maritalStatusId?: number;
+  businessTravelId?: number;
+  workShiftId?: number;
+  environmentSatisfactionId?: number;
+  jobInvolvementId?: number;
+  jobSatisfactionId?: number;
+  relationshipSatisfactionId?: number;
+  workLifeBalanceId?: number;
+  performanceRatingId?: number;
 }
 
 // Backend response structure
@@ -161,11 +176,24 @@ export interface EmployeesQueryParams {
 export type CreateEmployeeDto = Omit<Employee, 'id'>;
 export type UpdateEmployeeDto = Employee; // Includes id
 
-// Legacy types for backward compatibility (deprecated - use Employee)
-export type EmployeePayload = CreateEmployeeDto;
-export type EmployeeSort = {
-  field?: string;
-  order?: 'ascend' | 'descend';
+/** React Router state for /employees/:employeeId (Option A — no GET by id) */
+export type EmployeeDetailsLocationState = {
+  employee: Employee;
+};
+
+export type EmployeeStatsGroupBy = 'department' | 'jobRole' | 'education' | 'attritionRiskClass';
+
+export type EmployeeStatsRow = {
+  department?: string;
+  jobRole?: string;
+  education?: string;
+  attritionRiskClass?: string;
+  _count: { id: number };
+  _avg: {
+    monthlyIncome: number | null;
+    age: number | null;
+    jobSatisfaction: number | null;
+  };
 };
 
 // Auth types
@@ -190,6 +218,40 @@ export type AuthResponse = SignInResponse | VerificationResponse;
 export interface RefreshTokenResponse {
   access_token: string;
   refresh_token: string;
+}
+
+export interface VerifingDto {
+  userId: string;
+  code: number;
+}
+
+export interface UserIdDto {
+  userId: string;
+}
+
+export interface ResetPasswordDto {
+  userId: string;
+  code: number;
+  email: string;
+  newPassword: string;
+}
+
+export type UserRole = 'ADMIN' | 'SUPER_ADMIN';
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role?: UserRole;
+}
+
+export interface CreateUserDto {
+  name: string;
+  email: string;
+  password: string;
+  phone?: string;
+  role?: UserRole;
 }
 
 // Other types

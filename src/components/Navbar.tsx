@@ -9,7 +9,9 @@ type NavbarProps = {
 }
 
 export function Navbar({ onMenuClick }: NavbarProps) {
-  const { user, logout } = useAuthStore()
+  const email = useAuthStore((s) => s.email)
+  const role = useAuthStore((s) => s.role)
+  const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
 
   const handleLogout = async () => {
@@ -61,16 +63,19 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <button className="flex items-center gap-3 rounded-full border border-slate-200 px-3 py-1.5 transition hover:bg-slate-50">
               <div>
-                <p className="text-sm font-semibold text-slate-900">{user?.email ?? user?.name ?? 'Guest'}</p>
-                <p className="text-xs text-slate-500">{user?.role ?? 'Visitor'}</p>
+                <p className="text-sm font-semibold text-slate-900">{email ?? 'Guest'}</p>
+                <p className="text-xs text-slate-500">{role ?? 'Visitor'}</p>
               </div>
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 text-center text-sm font-bold leading-10 text-white">
-                {user?.name
-                  ?.split(' ')
-                  .map((chunk) => chunk[0])
+                {(email ?? 'hr')
+                  .split(/[@\s]+/)
+                  .filter(Boolean)
+                  .flatMap((part: string) => part.split('.'))
+                  .map((chunk: string) => chunk[0])
+                  .filter(Boolean)
                   .slice(0, 2)
                   .join('')
-                  .toUpperCase() ?? (user?.email?.[0]?.toUpperCase() ?? 'HR')}
+                  .toUpperCase() || 'HR'}
               </div>
             </button>
           </Dropdown>

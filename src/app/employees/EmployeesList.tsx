@@ -11,6 +11,7 @@ import {
   fetchEmployees,
   updateEmployee,
 } from '@/lib/api'
+import { getApiErrorMessage } from '@/lib/apiErrors'
 import type { CreateEmployeeDto, Employee, EmployeesQueryParams, UpdateEmployeeDto } from '@/lib/types'
 
 type TableFiltersState = Record<string, FilterValue | null>
@@ -133,9 +134,7 @@ export default function EmployeesList() {
       }))
     } catch (error: unknown) {
       console.error(error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to load employees'
-      message.error(errorMessage)
+      message.error(getApiErrorMessage(error, 'Failed to load employees'))
     } finally {
       setLoading(false)
     }
@@ -182,9 +181,7 @@ export default function EmployeesList() {
       await loadEmployees()
     } catch (error: unknown) {
       console.error(error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unable to save employee'
-      message.error(errorMessage)
+      message.error(getApiErrorMessage(error, 'Unable to save employee'))
     }
   }
 
@@ -196,9 +193,7 @@ export default function EmployeesList() {
       await loadEmployees()
     } catch (error: unknown) {
       console.error(error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unable to delete employee'
-      message.error(errorMessage)
+      message.error(getApiErrorMessage(error, 'Unable to delete employee'))
     }
   }
 
@@ -216,9 +211,7 @@ export default function EmployeesList() {
           await loadEmployees()
         } catch (error: unknown) {
           console.error(error)
-          const errorMessage =
-            error instanceof Error ? error.message : 'Unable to delete selected employees'
-          message.error(errorMessage)
+          message.error(getApiErrorMessage(error, 'Unable to delete selected employees'))
         }
       },
     })

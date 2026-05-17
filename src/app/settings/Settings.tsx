@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 export default function Settings() {
   return (
     <div className="space-y-6">
@@ -8,6 +10,19 @@ export default function Settings() {
           Manage authentication, integrations, and automation preferences.
         </p>
       </header>
+
+      <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <p className="text-lg font-semibold text-slate-900">User administration</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Create and remove accounts via the live Users API (SUPER_ADMIN required).
+        </p>
+        <Link
+          to="/users"
+          className="mt-4 inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+        >
+          Open Users
+        </Link>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <form className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">

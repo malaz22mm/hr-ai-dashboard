@@ -123,6 +123,10 @@ export function AddEditEmployeeModal({
         className="max-h-[70vh] overflow-y-auto pr-2"
       >
         <div className="grid grid-cols-2 gap-4">
+          <Form.Item label="Full name" name="name" rules={[{ required: true }]} className="col-span-2">
+            <Input placeholder="Employee name" />
+          </Form.Item>
+
           <Form.Item label="Department" name="department" rules={[{ required: true }]}>
             <Select
               placeholder="Select department"

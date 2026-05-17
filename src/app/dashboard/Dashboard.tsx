@@ -1,49 +1,49 @@
 import { useEffect, useState } from 'react'
+import { Alert, Spin } from 'antd'
 import { AlertTriangle, Gauge, Users } from 'lucide-react'
 import { StatsCard } from '@/components/StatsCard'
 import { ChartCard } from '@/components/ChartCard'
-import {
-  fetchAlerts,
-  fetchDashboardSnapshot,
-  fetchEmployees,
-  fetchPerformanceSeries,
-} from '@/lib/api'
-import type { Alert, Employee, PerformancePoint } from '@/lib/types'
+import { fetchDashboardBundle } from '@/lib/api'
+import { getApiErrorMessage } from '@/lib/apiErrors'
+import type { Alert as HrAlert, Employee, PerformancePoint } from '@/lib/types'
 
 export default function Dashboard() {
   const [topEmployees, setTopEmployees] = useState<Employee[]>([])
   const [performanceSeries, setPerformanceSeries] = useState<PerformancePoint[]>([])
-  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [alerts, setAlerts] = useState<HrAlert[]>([])
   const [snapshot, setSnapshot] = useState({
     employees: 0,
     performance: 0,
     alerts: 0,
     performanceTrend: 0,
   })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     let mounted = true
     const load = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        const [employeePage, performance, alertFeed, stats] = await Promise.all([
-          fetchEmployees({
-            take: 5,
-            skip: 0,
-            sortBy: 'engagementScore',
-            sortOrder: 'desc',
-          }),
-          fetchPerformanceSeries(),
-          fetchAlerts(),
-          fetchDashboardSnapshot(),
-        ])
+        const bundle = await fetchDashboardBundle()
 
         if (!mounted) return
-        setTopEmployees(employeePage.data)
-        setPerformanceSeries(performance)
-        setAlerts(alertFeed)
-        setSnapshot(stats)
-      } catch (error) {
-        console.error('Failed to load dashboard data:', error)
+        setTopEmployees(bundle.topPerformers)
+        setPerformanceSeries(bundle.performanceSeries)
+        setAlerts(bundle.alerts)
+        setSnapshot(bundle.snapshot)
+      } catch (err) {
+        if (!mounted) return
+        setError(
+          getApiErrorMessage(
+            err,
+            'Could not load employees from the API. Check that you are signed in and the backend database is running.',
+          ),
+        )
+        console.error('Failed to load dashboard data:', err)
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
 
@@ -52,6 +52,14 @@ export default function Dashboard() {
       mounted = false
     }
   }, [])
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <Spin size="large" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -62,6 +70,24 @@ export default function Dashboard() {
           Stay on top of headcount, wellbeing, and escalations in real time.
         </p>
       </header>
+
+      {error ? (
+        <Alert
+          type="error"
+          showIcon
+          message="Dashboard unavailable"
+          description={
+            <>
+              <p>{error}</p>
+              <p className="mt-2 text-sm">
+                The API at <code className="text-xs">hr-back-iza2.vercel.app</code> returned an error for{' '}
+                <code className="text-xs">GET /employees</code>. This is usually a backend or database issue — check
+                Vercel function logs, run migrations, and seed lookup tables.
+              </p>
+            </>
+          }
+        />
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <StatsCard
@@ -131,15 +157,13 @@ export default function Dashboard() {
             <li key={employee.id} className="flex items-center justify-between py-3">
               <div>
                 <p className="font-semibold text-slate-900">
-                  {employee.jobRole} · {employee.department}
+                  {employee.name} · {employee.jobRole} · {employee.department}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Age: {employee.age} · Gender: {employee.gender}
                 </p>
               </div>
-              <span className="text-sm font-semibold text-slate-900">
-                {employee.engagementScore}
-              </span>
+              <span className="text-sm font-semibold text-slate-900">{employee.engagementScore}</span>
             </li>
           ))}
         </ul>

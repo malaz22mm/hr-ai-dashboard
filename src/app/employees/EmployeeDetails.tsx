@@ -1,57 +1,71 @@
-import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { Tag, Card, Row, Col, Spin, message } from 'antd'
-import { fetchEmployeeById } from '@/lib/api'
-import type { Employee } from '@/lib/types'
+import { Link, useLocation, useParams } from 'react-router-dom'
+import { Tag, Card, Row, Col, Button, Result } from 'antd'
+import { ArrowLeftOutlined } from '@ant-design/icons'
+import type { EmployeeDetailsLocationState } from '@/lib/types'
+
+function isValidEmployeeState(
+  state: unknown,
+  employeeId: string | undefined,
+): state is EmployeeDetailsLocationState {
+  if (!employeeId || !state || typeof state !== 'object') return false
+  const candidate = state as EmployeeDetailsLocationState
+  return Boolean(candidate.employee?.id && candidate.employee.id === employeeId)
+}
 
 export default function EmployeeDetails() {
   const { employeeId } = useParams<{ employeeId: string }>()
-  const [employee, setEmployee] = useState<Employee | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!employeeId) return
-
-    const loadEmployee = async () => {
-      try {
-        setLoading(true)
-        const data = await fetchEmployeeById(employeeId)
-        setEmployee(data)
-      } catch (error) {
-        console.error(error)
-        message.error('Failed to load employee details')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadEmployee()
-  }, [employeeId])
+  const location = useLocation()
+  const employee = isValidEmployeeState(location.state, employeeId)
+    ? location.state.employee
+    : null
 
   if (!employeeId) {
-    return <p className="text-muted-foreground">No employee selected.</p>
-  }
-
-  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Spin size="large" />
-      </div>
+      <Result
+        status="warning"
+        title="No employee selected"
+        subTitle="Open a profile from the employee directory."
+        extra={
+          <Link to="/employees">
+            <Button type="primary" icon={<ArrowLeftOutlined />}>
+              Back to Employee Directory
+            </Button>
+          </Link>
+        }
+      />
     )
   }
 
   if (!employee) {
-    return <p className="text-muted-foreground">Employee not found.</p>
+    return (
+      <Result
+        status="info"
+        title="Profile unavailable"
+        subTitle="Employee details are only available when opened from the directory. Refreshing or using a direct link does not load profile data until a dedicated API endpoint exists."
+        extra={
+          <Link to="/employees">
+            <Button type="primary" icon={<ArrowLeftOutlined />}>
+              Back to Employee Directory
+            </Button>
+          </Link>
+        }
+      />
+    )
   }
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Profile</p>
-        <h1 className="mt-2 text-3xl font-semibold text-slate-900">Employee Details</h1>
-        <p className="mt-1 text-base text-muted-foreground">
-          {employee.jobRole} · {employee.department}
-        </p>
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Profile</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Employee Details</h1>
+          <p className="mt-1 text-base text-muted-foreground">
+            {employee.jobRole} · {employee.department}
+          </p>
+        </div>
+        <Link to="/employees">
+          <Button icon={<ArrowLeftOutlined />}>Back to directory</Button>
+        </Link>
       </header>
 
       <Row gutter={[16, 16]}>
@@ -169,7 +183,15 @@ export default function EmployeeDetails() {
           <Card title="Metrics & Scores">
             <p>
               <strong>Engagement Score:</strong>{' '}
-              <Tag color={employee.engagementScore >= 85 ? 'success' : employee.engagementScore >= 70 ? 'warning' : 'error'}>
+              <Tag
+                color={
+                  employee.engagementScore >= 85
+                    ? 'success'
+                    : employee.engagementScore >= 70
+                      ? 'warning'
+                      : 'error'
+                }
+              >
                 {employee.engagementScore}
               </Tag>
             </p>

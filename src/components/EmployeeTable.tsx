@@ -232,7 +232,11 @@ export function EmployeeTable({
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          <Link to={`/employees/${record.id}`} className="text-slate-700">
+          <Link
+            to={`/employees/${record.id}`}
+            state={{ employee: record }}
+            className="text-slate-700"
+          >
             <EyeOutlined />
           </Link>
           <Button icon={<EditOutlined />} size="small" onClick={() => onEdit(record)}>
