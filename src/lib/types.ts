@@ -236,7 +236,7 @@ export interface ResetPasswordDto {
   newPassword: string;
 }
 
-export type UserRole = 'ADMIN' | 'SUPER_ADMIN';
+export type UserRole = 'ADMIN' | 'SUPER_ADMIN' | 'EMPLOYEE';
 
 export interface User {
   id: string;

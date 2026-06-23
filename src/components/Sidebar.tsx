@@ -6,6 +6,8 @@ import {
   UserCog,
   Users2,
   FileBarChart2,
+  Clock,
+  CalendarDays,
   X,
 } from 'lucide-react'
 import { useAuthStore } from '@/hooks/useAuth'
@@ -14,6 +16,8 @@ import { cn } from '@/lib/utils'
 const navigation = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Employees', to: '/employees', icon: Users2 },
+  { label: 'Attendance', to: '/attendance', icon: Clock },
+  { label: 'Vacations', to: '/vacations', icon: CalendarDays },
   { label: 'Reports', to: '/reports', icon: FileBarChart2 },
   { label: 'Users', to: '/users', icon: UserCog, superAdminOnly: true },
   { label: 'Settings', to: '/settings', icon: Settings2 },

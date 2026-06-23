@@ -3,11 +3,9 @@ import { emitSessionExpired } from '@/auth/sessionEvents'
 import { tokenStorage } from '@/auth/tokenStorage'
 import { getApiBaseUrl } from '@/api/env'
 import { refreshTokenPair } from '@/api/refreshMutex'
-import type {
-  ApiEmployeeStatsRow,
-  ApiEmployeesListResponse,
-  ApiStatsGroupBy,
-} from './employees/apiTypes'
+import { normalizeEmployeeStatsRows } from './employees/statsNormalizer'
+import type { EmployeeStatsGroupDto } from '@/types/dto'
+import type { ApiEmployeesListResponse, ApiStatsGroupBy } from './employees/apiTypes'
 import {
   mapApiEmployeeToEmployee,
   mapCreateEmployeeToApi,
@@ -116,8 +114,9 @@ export const logout = async (_refreshToken?: string): Promise<void> => {
   tokenStorage.clearTokens()
 }
 
-export const verifyAccount = async (payload: VerifingDto): Promise<void> => {
-  await apiClient.post('/auth/verify', payload)
+export const verifyAccount = async (payload: VerifingDto): Promise<RefreshTokenResponse> => {
+  const response = await apiClient.post<RefreshTokenResponse>('/auth/verify', payload)
+  return response.data
 }
 
 export const resendVerificationCode = async (payload: UserIdDto): Promise<void> => {
@@ -135,10 +134,18 @@ export const resetPassword = async (payload: ResetPasswordDto): Promise<void> =>
 // ==================== USERS ====================
 
 export const fetchUsers = async (search?: string): Promise<User[]> => {
-  const response = await apiClient.get<User[]>('/users', {
-    params: search ? { search } : undefined,
-  })
-  return response.data
+  const { usersApi } = await import('@/api/resources/usersApi')
+  const safe = await usersApi.list(search)
+  return safe.map((u) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    phone: u.phone ?? undefined,
+    role: u.role,
+    approvalState: u.approvalState,
+    createdAt: u.createdAt,
+    updatedAt: u.updatedAt,
+  }))
 }
 
 export const createUser = async (payload: CreateUserDto): Promise<void> => {
@@ -266,12 +273,11 @@ function aggregateEmployeeStats(
   }))
 }
 
-function mapApiStatsRows(
-  rows: ApiEmployeeStatsRow[],
+function mapStatsDtoToRows(
+  rows: EmployeeStatsGroupDto[],
   groupBy: EmployeeStatsGroupBy,
   lookups: LookupMaps,
 ): EmployeeStatsRow[] {
-  const idField = STATS_GROUP_BY_API[groupBy]
   const labelMap =
     groupBy === 'department'
       ? lookups.departments
@@ -281,19 +287,15 @@ function mapApiStatsRows(
           ? lookups.educationLevels
           : lookups.attritionRiskClasses
 
-  return rows.map((row) => {
-    const groupId = row[idField as keyof ApiEmployeeStatsRow] as number | undefined
-    const label = groupId != null ? (labelMap.get(groupId) ?? String(groupId)) : 'Unknown'
-    return {
-      [groupBy]: label,
-      _count: row._count,
-      _avg: {
-        monthlyIncome: row._avg.monthly_income ?? null,
-        age: row._avg.age ?? null,
-        jobSatisfaction: row._avg.job_satisfaction_id ?? null,
-      },
-    }
-  })
+  return rows.map((row) => ({
+    [groupBy]: labelMap.get(row.group) ?? String(row.group),
+    _count: { id: row.count },
+    _avg: {
+      monthlyIncome: row.averageSalary ?? null,
+      age: row.averageAge ?? null,
+      jobSatisfaction: row.avgEngagement ?? null,
+    },
+  }))
 }
 
 export const fetchEmployees = async (
@@ -306,10 +308,11 @@ export const fetchEmployeeStats = async (
   const apiGroupBy = STATS_GROUP_BY_API[groupBy]
   try {
     const lookups = await ensureLookups()
-    const response = await apiClient.get<ApiEmployeeStatsRow[]>('/employees/stats', {
+    const response = await apiClient.get<unknown>('/employees/stats', {
       params: { groupBy: apiGroupBy },
     })
-    return mapApiStatsRows(response.data, groupBy, lookups)
+    const normalized = normalizeEmployeeStatsRows(response.data)
+    return mapStatsDtoToRows(normalized, groupBy, lookups)
   } catch {
     const employees = await loadEmployeesDataset()
     return aggregateEmployeeStats(employees, groupBy)

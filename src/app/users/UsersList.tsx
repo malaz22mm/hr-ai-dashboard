@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Input, Modal, Form, Select, Space, Table, message, Popconfirm } from 'antd'
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons'
+import { UsersSectionNav } from '@/components/users/UsersSectionNav'
 import { createUser, deleteUser, fetchUsers } from '@/lib/api'
 import { getApiErrorMessage } from '@/lib/apiErrors'
 import type { CreateUserDto, User, UserRole } from '@/lib/types'
@@ -62,6 +63,8 @@ export default function UsersList() {
           Manage workspace accounts. Requires SUPER_ADMIN on the API.
         </p>
       </header>
+
+      <UsersSectionNav />
 
       <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
         <Space wrap className="mb-4">

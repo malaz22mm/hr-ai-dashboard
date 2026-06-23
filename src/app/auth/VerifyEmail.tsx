@@ -2,7 +2,8 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { message } from 'antd'
-import { resendVerificationCode, verifyAccount } from '@/lib/api'
+import { authApi } from '@/api/resources/authApi'
+import { useAuthStore } from '@/auth/authStore'
 import { getApiErrorMessage } from '@/lib/apiErrors'
 
 const VERIFICATION_USER_KEY = 'hr_verification_user_id'
@@ -21,6 +22,7 @@ export function clearStoredVerificationUserId() {
 
 export default function VerifyEmail() {
   const navigate = useNavigate()
+  const setSessionFromTokens = useAuthStore((s) => s.setSessionFromTokens)
   const [userId, setUserId] = useState(() => getStoredVerificationUserId() ?? '')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,10 +32,11 @@ export default function VerifyEmail() {
     event.preventDefault()
     setLoading(true)
     try {
-      await verifyAccount({ userId, code: Number(code) })
+      const tokens = await authApi.verify({ userId, code: Number(code) })
+      setSessionFromTokens(tokens.access_token, tokens.refresh_token)
       clearStoredVerificationUserId()
-      message.success('Email verified. You can sign in now.')
-      navigate('/login')
+      message.success('Email verified. Welcome!')
+      navigate('/')
     } catch (error) {
       message.error(getApiErrorMessage(error, 'Verification failed'))
     } finally {
@@ -48,7 +51,7 @@ export default function VerifyEmail() {
     }
     setResending(true)
     try {
-      await resendVerificationCode({ userId })
+      await authApi.resendVerification({ userId })
       message.success('Verification code sent')
     } catch (error) {
       message.error(getApiErrorMessage(error, 'Could not resend code'))
@@ -114,4 +117,3 @@ export default function VerifyEmail() {
     </div>
   )
 }
-

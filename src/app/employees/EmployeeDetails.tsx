@@ -1,6 +1,8 @@
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { Tag, Card, Row, Col, Button, Result } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
+import { EmployeeAttendanceVacationPanel } from '@/components/EmployeeAttendanceVacationPanel'
+import { MlAttritionPredictionCard } from '@/components/MlAttritionPredictionCard'
 import type { EmployeeDetailsLocationState } from '@/lib/types'
 
 function isValidEmployeeState(
@@ -19,6 +21,9 @@ export default function EmployeeDetails() {
     ? location.state.employee
     : null
 
+  const numericEmpId = employeeId ? Number(employeeId) : NaN
+  const hasValidEmpId = Number.isFinite(numericEmpId) && numericEmpId >= 0
+
   if (!employeeId) {
     return (
       <Result
@@ -36,7 +41,7 @@ export default function EmployeeDetails() {
     )
   }
 
-  if (!employee) {
+  if (!employee && !hasValidEmpId) {
     return (
       <Result
         status="info"
@@ -50,6 +55,31 @@ export default function EmployeeDetails() {
           </Link>
         }
       />
+    )
+  }
+
+  if (!employee) {
+    return (
+      <div className="space-y-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Profile</p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-900">Employee #{numericEmpId}</h1>
+            <p className="mt-1 text-base text-muted-foreground">
+              HR profile data unavailable — attendance and vacation APIs still work.
+            </p>
+          </div>
+          <Link to="/employees">
+            <Button icon={<ArrowLeftOutlined />}>Back to directory</Button>
+          </Link>
+        </header>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} md={12}>
+            <MlAttritionPredictionCard employeeId={numericEmpId} />
+          </Col>
+        </Row>
+        <EmployeeAttendanceVacationPanel empId={numericEmpId} />
+      </div>
     )
   }
 
@@ -72,7 +102,7 @@ export default function EmployeeDetails() {
         <Col xs={24} md={12}>
           <Card title="Basic Information">
             <p>
-              <strong>Employee ID:</strong> {employee.id.substring(0, 8)}...
+              <strong>Employee ID:</strong> {employee.id}
             </p>
             <p>
               <strong>Gender:</strong> {employee.gender}
@@ -225,7 +255,7 @@ export default function EmployeeDetails() {
         </Col>
 
         <Col xs={24} md={12}>
-          <Card title="Attendance & Time">
+          <Card title="Attendance & Time (HR metrics)">
             <p>
               <strong>Absence Days Last Month:</strong> {employee.absenceDaysLastMonth}
             </p>
@@ -262,6 +292,16 @@ export default function EmployeeDetails() {
               <strong>Years with Current Manager:</strong> {employee.yearsWithCurrManager}
             </p>
           </Card>
+        </Col>
+
+        <Col xs={24} md={12}>
+          <MlAttritionPredictionCard employeeId={Number(employee.id)} />
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} className="mt-2">
+        <Col xs={24}>
+          <EmployeeAttendanceVacationPanel empId={Number(employee.id)} employeeName={employee.name} />
         </Col>
       </Row>
     </div>
