@@ -6,6 +6,7 @@ export interface Employee {
   age: number;
   gender: string;
   maritalStatus: 'Single' | 'Married' | 'Divorced';
+  healthStatus: 'Poor' | 'Fair' | 'Good' | 'Very Good' | 'Excellent';
   distanceFromHome: number;
   monthlyIncome: number;
   percentSalaryHike: number;
@@ -63,6 +64,7 @@ export interface Employee {
   attritionRiskClassId?: number;
   educationId?: number;
   maritalStatusId?: number;
+  healthStatusId?:number;
   businessTravelId?: number;
   workShiftId?: number;
   environmentSatisfactionId?: number;
@@ -112,6 +114,7 @@ export interface EmployeesQueryParams {
     | 'Research Director'
     | 'Human Resources';
   maritalStatus?: 'Single' | 'Married' | 'Divorced';
+  healthStatus?: 'Poor' | 'Fair' | 'Good' | 'Very Good' | 'Excellent';
   overTime?: 'Yes' | 'No';
   attritionRiskClass?: 'Low' | 'Medium' | 'High';
   gender?: string;

@@ -99,6 +99,7 @@ Swagger lists **many** `GET /employees` filters (absence ratios, promotion stagn
 | `/lookups/job-roles` | ✅ | ✅ |
 | `/lookups/education-levels` | ✅ | ✅ |
 | `/lookups/marital-statuses` | ✅ | ✅ |
+| `/lookups/health-statuses` | ✅ | ✅ |
 | `/lookups/business-travel` | ✅ | ❌ (not needed for current mapper) |
 | `/lookups/performance-ratings` | ✅ | ❌ |
 | `/lookups/attrition-risk-classes` | ✅ | ✅ |

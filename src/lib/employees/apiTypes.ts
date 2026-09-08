@@ -31,6 +31,7 @@ export interface ApiEmployee {
   promotion_stagnation_ratio: number
   role_stability_ratio: number
   marital_status_id: number
+  health_state_id: number
   job_role_id: number
   business_travel_id: number
   department_id: number
@@ -95,6 +96,7 @@ export type ApiStatsGroupBy =
   | 'job_role_id'
   | 'education_id'
   | 'marital_status_id'
+  |'health_state_id'
   | 'business_travel_id'
   | 'work_shift_id'
   | 'attrition_risk_class_id'
@@ -105,6 +107,7 @@ export type ApiEmployeeStatsRow = {
   job_role_id?: number
   education_id?: number
   marital_status_id?: number
+  health_state_id?:number 
   business_travel_id?: number
   work_shift_id?: number
   attrition_risk_class_id?: number

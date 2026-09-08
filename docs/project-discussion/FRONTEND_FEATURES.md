@@ -40,7 +40,7 @@ Each section lists **UI flow**, **backend endpoints** (from `back/COMPLETE_API_R
 - **`GET /employees`** — query params: `skip`, `take`, filters mapped via `mapEmployeesQueryToApi` (camelCase API keys with FK ids).
 - **`POST /employees`**, **`PUT /employees`**, **`DELETE /employees/:id`** — `:id` is **integer** per API reference (`deleteEmployee` uses `Number(id)`).
 
-**Lookups:** `ensureLookups()` → parallel **`GET /lookups/departments`**, **`job-roles`**, **`education-levels`**, **`marital-statuses`**, **`satisfaction-scales`**, **`attrition-risk-classes`**.
+**Lookups:** `ensureLookups()` → parallel **`GET /lookups/departments`**, **`job-roles`**, **`education-levels`**, **`marital-statuses`**,**`health-statuses`**, **`satisfaction-scales`**, **`attrition-risk-classes`**.
 
 **State:** Local `useState` + `useEffect`; **Axios**. **RQ** analogue: `useEmployeesQuery` (**not wired**).
 

@@ -23,6 +23,7 @@ const FILTER_KEY_MAP: Record<string, keyof EmployeesQueryParams> = {
   gender: 'gender',
   attrition: 'attrition',
   maritalStatus: 'maritalStatus',
+  healthStatus: 'healthStatus' ,
   businessTravel: 'businessTravel',
   education: 'education',
   educationField: 'educationField',

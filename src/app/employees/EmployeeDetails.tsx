@@ -86,9 +86,9 @@ export default function EmployeeDetails() {
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <div>
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">Profile</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-900">Employee Details</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900">{employee.name}</h1>
           <p className="mt-1 text-base text-muted-foreground">
             {employee.jobRole} · {employee.department}
           </p>
@@ -115,6 +115,9 @@ export default function EmployeeDetails() {
             </p>
             <p>
               <strong>Distance From Home:</strong> {employee.distanceFromHome} km
+            </p>
+            <p>
+              <strong>Health Status:</strong> {employee.healthStatus} 
             </p>
           </Card>
         </Col>

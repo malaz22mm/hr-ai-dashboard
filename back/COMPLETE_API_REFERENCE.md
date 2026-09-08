@@ -40,6 +40,7 @@ Base URL (Vercel): your deployment root (no `/api` prefix on routes).
 | GET | `/lookups/job-roles` | AT | — | Lookup items | 200 |
 | GET | `/lookups/education-levels` | AT | — | Lookup items | 200 |
 | GET | `/lookups/marital-statuses` | AT | — | Lookup items | 200 |
+| GET | `/lookups/health-statuses` | AT | — | Lookup items | 200 |
 | GET | `/lookups/business-travel` | AT | — | Lookup items | 200 |
 | GET | `/lookups/performance-ratings` | AT | — | Lookup items | 200 |
 | GET | `/lookups/attrition-risk-classes` | AT | — | Lookup items | 200 |

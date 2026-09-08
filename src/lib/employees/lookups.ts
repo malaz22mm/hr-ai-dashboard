@@ -14,8 +14,9 @@ export type LookupMaps = {
   jobRolesByName: Map<string, number>
   educationLevels: Map<number, string>
   maritalStatuses: Map<number, string>
+  healthStatuses: Map<number, string>
+  healthStatusesByName: Map<string, number> // <-- Added this
   satisfaction: Map<number, string>
-  /** Inferred from lookup rows or id → label fallback */
   attritionRiskClasses: Map<number, string>
   attritionRiskClassesByName: Map<string, number>
 }
@@ -66,6 +67,7 @@ export async function ensureLookups(): Promise<LookupMaps> {
         jobRoles,
         educationLevels,
         maritalStatuses,
+        healthStatuses,
         satisfaction,
         attritionRiskRaw,
       ] = await Promise.all([
@@ -73,6 +75,7 @@ export async function ensureLookups(): Promise<LookupMaps> {
         fetchLookupList('/lookups/job-roles'),
         fetchLookupList('/lookups/education-levels'),
         fetchLookupList('/lookups/marital-statuses'),
+        fetchLookupList('/lookups/health-statuses'),
         fetchLookupList('/lookups/satisfaction-scales'),
         fetchLookupList('/lookups/attrition-risk-classes'),
       ])
@@ -82,6 +85,7 @@ export async function ensureLookups(): Promise<LookupMaps> {
 
       const departmentMap = toMap(departments)
       const jobRoleMap = toMap(jobRoles)
+      const healthStatusMap = toMap(healthStatuses)
 
       cachedLookups = {
         departments: departmentMap,
@@ -90,6 +94,8 @@ export async function ensureLookups(): Promise<LookupMaps> {
         jobRolesByName: invertMap(jobRoleMap),
         educationLevels: toMap(educationLevels),
         maritalStatuses: toMap(maritalStatuses),
+        healthStatuses: healthStatusMap,
+        healthStatusesByName: invertMap(healthStatusMap), // <-- Safely inverted here
         satisfaction: toMap(satisfaction),
         attritionRiskClasses: toMap(attritionRisk),
         attritionRiskClassesByName: invertMap(toMap(attritionRisk)),

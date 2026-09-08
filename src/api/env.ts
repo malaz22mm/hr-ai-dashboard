@@ -6,6 +6,7 @@ export function getApiBaseUrl(): string {
     import.meta.env.VITE_API_URL ??
     import.meta.env.VITE_API_BASE_URL ??
     'https://hr-back-iza2.vercel.app'
+    // 'http://localhost:3000'
   return raw.replace(/\/$/, '')
 }
 

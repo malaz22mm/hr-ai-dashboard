@@ -45,6 +45,14 @@ const MARITAL_STATUS_OPTIONS = [
   { value: 'Divorced', label: 'Divorced' },
 ]
 
+const HEALTH_STATUS_OPTIONS = [
+  { value: 'Poor', label: 'Poor' },
+  { value: 'Fair', label: 'Fair' },
+  { value: 'Good', label: 'Good' },
+  { value: 'Very Good', label: 'Very Good' },
+  { value: 'Excellent', label: 'Excellent' },
+]
+
 const SATISFACTION_OPTIONS = [
   { value: 'Low', label: 'Low' },
   { value: 'Medium', label: 'Medium' },
@@ -80,7 +88,6 @@ export function AddEditEmployeeModal({
       form.setFieldsValue(employee)
     } else {
       form.resetFields()
-      // Set default values for new employee
       form.setFieldsValue({
         attrition: 'No',
         overTime: 'No',
@@ -91,6 +98,7 @@ export function AddEditEmployeeModal({
         performanceRating: 'Good',
         relationshipSatisfaction: 'Medium',
         workLifeBalance: 'Medium',
+        healthStatus: 'Good',
       })
     }
   }, [employee, form])
@@ -151,6 +159,10 @@ export function AddEditEmployeeModal({
 
           <Form.Item label="Marital Status" name="maritalStatus" rules={[{ required: true }]}>
             <Select options={MARITAL_STATUS_OPTIONS} />
+          </Form.Item>
+          
+          <Form.Item label="Health Status" name="healthStatus" rules={[{ required: true }]}>
+            <Select options={HEALTH_STATUS_OPTIONS} />
           </Form.Item>
 
           <Form.Item label="Attrition" name="attrition" rules={[{ required: true }]}>

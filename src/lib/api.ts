@@ -52,6 +52,13 @@ apiClient.interceptors.request.use(
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    console.log('[apiClient] Request Details:', {
+      url: config.url,
+      method: config.method,
+      authorization: config.headers?.Authorization,
+    });
+
     return config
   },
   (error) => Promise.reject(error),

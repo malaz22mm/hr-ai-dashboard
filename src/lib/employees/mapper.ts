@@ -21,23 +21,41 @@ function attritionRiskLabel(lookups: LookupMaps, id: number): Employee['attritio
   return 'Low'
 }
 
-export function mapApiEmployeeToEmployee(api: ApiEmployee, lookups: LookupMaps): Employee {
+export function mapApiEmployeeToEmployee(api: ApiEmployee & any, lookups: LookupMaps): Employee {
+  // 1. الأولوية الآن لقراءة الاسم مباشرة من الكائن المرفق من قاعدة البيانات (مثال: api.Department.name)
+  // 2. إذا لم يكن موجوداً، يحاول قراءته من الـ lookups
+  // 3. إذا فشل الاثنان، يضع القيمة الافتراضية "Unknown"
+  const mappedDept = api.Department?.name ?? lookups.departments.get(api.department_id) ?? 'Unknown Department';
+  const mappedHealth = api.HealthState?.name ?? lookups.healthStatuses.get(api.health_state_id) ?? 'Good';
+  const mappedRole = api.JobRole?.name ?? lookups.jobRoles.get(api.job_role_id) ?? 'Unknown Role';
+  const mappedMaritalStatus = api.MaritalStatus?.name ?? lookups.maritalStatuses.get(api.marital_status_id) ?? 'Single';
+  const mappedEducation = api.Education?.name ?? lookups.educationLevels.get(api.education_id) ?? 'College';
+  const mappedBusinessTravel = api.BusinessTravel?.name ?? `Travel #${api.business_travel_id}`;
+
   return {
     id: String(api.id),
     name: api.name,
     attrition: api.attrition ? 'Yes' : 'No',
     age: api.age,
-    gender: api.gender ? 'Male' : 'Female',
-    maritalStatus: (lookups.maritalStatuses.get(api.marital_status_id) ?? 'Single') as Employee['maritalStatus'],
+    
+    // تم الإصلاح: true = Female, false = Male
+    gender: api.gender ? 'Female' : 'Male', 
+    
+    maritalStatus: mappedMaritalStatus as Employee['maritalStatus'],
+    healthStatus: mappedHealth as Employee['healthStatus'],
     distanceFromHome: api.distance_from_home,
     monthlyIncome: api.monthly_income,
     percentSalaryHike: api.percent_salary_hike,
     jobLevel: api.job_level,
-    jobRole: (lookups.jobRoles.get(api.job_role_id) ?? 'Unknown') as Employee['jobRole'],
-    businessTravel: `Travel #${api.business_travel_id}` as Employee['businessTravel'],
-    department: (lookups.departments.get(api.department_id) ?? 'Unknown') as Employee['department'],
-    education: (lookups.educationLevels.get(api.education_id) ?? 'College') as Employee['education'],
-    educationField: 'Other',
+    jobRole: mappedRole as Employee['jobRole'],
+    businessTravel: mappedBusinessTravel as Employee['businessTravel'],
+    department: mappedDept as Employee['department'],
+    education: mappedEducation as Employee['education'],
+    
+    // ملاحظة: حقل EducationField غير موجود في الـ JSON القادم من الباك إند، 
+    // لذلك سيبقى Other حتى تقوم بإضافته في الباك إند وتمريره هنا (مثال: api.EducationField?.name)
+    educationField: 'Other', 
+    
     numCompaniesWorked: api.num_of_companies_worked,
     totalWorkingYears: api.total_working_years,
     trainingTimesLastYear: api.training_times_last_year,
@@ -55,11 +73,11 @@ export function mapApiEmployeeToEmployee(api: ApiEmployee, lookups: LookupMaps):
     relationshipSatisfaction: satisfactionLabel(lookups, api.relationship_satisfaction_id),
     workLifeBalance: satisfactionLabel(lookups, api.work_life_balance_id),
     overTime: api.over_time ? 'Yes' : 'No',
-    absenceDaysLastMonth: 0,
-    absenceDaysLast3Months: 0,
-    absenceRatio: 0,
-    lateArrivalsLastMonth: 0,
-    overtimeHoursLastMonth: 0,
+absenceDaysLastMonth: api.absence_days_last_month ?? 0,
+    absenceDaysLast3Months: api.absence_days_last_3_months ?? 0,
+    absenceRatio: api.absence_ratio ?? 0,
+    lateArrivalsLastMonth: api.late_arrivals_last_month ?? 0,
+    overtimeHoursLastMonth: api.overtime_hours_last_month ?? 0,
     workloadPressureIndex: api.workload_pressure_index,
     engagementScore: api.engagement_score,
     managerFeedbackScore: api.engagement_feedback_score,
@@ -70,6 +88,7 @@ export function mapApiEmployeeToEmployee(api: ApiEmployee, lookups: LookupMaps):
     attritionRiskClassId: api.attrition_risk_class_id,
     educationId: api.education_id,
     maritalStatusId: api.marital_status_id,
+    healthStatusId: api.health_state_id,
     businessTravelId: api.business_travel_id,
     workShiftId: api.work_shift_id,
     environmentSatisfactionId: api.environment_satisfaction_id,
@@ -80,7 +99,6 @@ export function mapApiEmployeeToEmployee(api: ApiEmployee, lookups: LookupMaps):
     performanceRatingId: api.performance_rating_id,
   }
 }
-
 function slugCode(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
 }
@@ -120,6 +138,8 @@ export function mapCreateEmployeeToApi(
     promotion_stagnation_ratio: 0,
     role_stability_ratio: employee.roleStabilityRatio,
     marital_status_id: employee.maritalStatusId ?? lookups.maritalStatuses.keys().next().value ?? 1,
+    // Explicitly safe mapping for the new health field
+    health_state_id: employee.healthStatusId ?? lookups.healthStatusesByName.get(employee.healthStatus) ?? 1,
     job_role_id: employee.jobRoleId ?? lookups.jobRolesByName.get(employee.jobRole) ?? 1,
     business_travel_id: employee.businessTravelId ?? 1,
     department_id: employee.departmentId ?? lookups.departmentsByName.get(employee.department) ?? 1,

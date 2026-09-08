@@ -6,6 +6,7 @@ export type LookupBundle = {
   jobRoles: LookupItemDto[]
   educationLevels: LookupItemDto[]
   maritalStatuses: LookupItemDto[]
+  healthStatuses: LookupItemDto[]
   businessTravel: LookupItemDto[]
   performanceRatings: LookupItemDto[]
   attritionRiskClasses: LookupItemDto[]
@@ -26,6 +27,7 @@ export const lookupsApi = {
       jobRoles,
       educationLevels,
       maritalStatuses,
+      healthStatuses,
       businessTravel,
       performanceRatings,
       attritionRiskClasses,
@@ -37,6 +39,7 @@ export const lookupsApi = {
       getJsonArray<LookupItemDto>('/lookups/job-roles'),
       getJsonArray<LookupItemDto>('/lookups/education-levels'),
       getJsonArray<LookupItemDto>('/lookups/marital-statuses'),
+      getJsonArray<LookupItemDto>('/lookups/health-statuses'),
       getJsonArray<LookupItemDto>('/lookups/business-travel'),
       getJsonArray<LookupItemDto>('/lookups/performance-ratings'),
       getJsonArray<LookupItemDto>('/lookups/attrition-risk-classes'),
@@ -50,6 +53,7 @@ export const lookupsApi = {
       jobRoles,
       educationLevels,
       maritalStatuses,
+      healthStatuses,
       businessTravel,
       performanceRatings,
       attritionRiskClasses,

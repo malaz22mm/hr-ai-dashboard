@@ -50,6 +50,11 @@ export const httpClient = {
       const access = tokenStorage.getAccessToken()
       if (access) headers.set('Authorization', `Bearer ${access}`)
     }
+  console.log('[httpClient] Request Details:', {
+      url: path, // أو المتغير الذي يحمل الرابط
+      hasAuthHeader: headers.has('Authorization'),
+      authHeaderValue: headers.get('Authorization'), 
+    });
 
     let serializedBody: BodyInit | undefined
     if (body === null || body === undefined) {
@@ -86,7 +91,9 @@ export const httpClient = {
         const pair = await refreshTokenPair()
         headers.set('Authorization', `Bearer ${pair.access_token}`)
         res = await doFetch()
-      } catch {
+            } catch {
+        tokenStorage.clearTokens()
+        window.location.href = '/login'
         emitSessionExpired()
         throw new ApiError('Session expired', 401, ['Please sign in again'])
       }

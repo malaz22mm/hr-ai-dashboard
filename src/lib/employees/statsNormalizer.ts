@@ -59,7 +59,7 @@ function pickGroupId(r: Record<string, unknown>): number | null {
     'department_id',
     'job_role_id',
     'education_id',
-    'marital_status_id',
+    'health_state_id',
     'business_travel_id',
     'work_shift_id',
     'attrition_risk_class_id',

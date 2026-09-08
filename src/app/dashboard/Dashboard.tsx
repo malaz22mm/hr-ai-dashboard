@@ -106,43 +106,10 @@ export default function Dashboard() {
           trendLabel={`${snapshot.performanceTrend}% improvement`}
           icon={<Gauge className="h-6 w-6" />}
         />
-        <StatsCard
-          title="Open alerts"
-          value={snapshot.alerts.toString()}
-          description="Policy, payroll, and compliance signals."
-          trend={snapshot.alerts > 4 ? 'down' : 'up'}
-          trendLabel={snapshot.alerts > 4 ? 'Investigations in progress' : 'Risk trending low'}
-          icon={<AlertTriangle className="h-6 w-6" />}
-        />
+       
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <ChartCard data={performanceSeries} title="Engagement performance" subtitle="Rolling 12 months" />
-        </div>
-        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-semibold text-slate-900">Alerts Center</p>
-              <p className="text-sm text-muted-foreground">Signals requiring HR attention</p>
-            </div>
-            <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-              {alerts.length} active
-            </span>
-          </div>
-          <ul className="mt-4 space-y-4">
-            {alerts.map((alert) => (
-              <li
-                key={alert.id}
-                className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-sm text-slate-700"
-              >
-                <p className="font-semibold text-slate-900">{alert.message}</p>
-                <p className="text-xs uppercase tracking-wide text-slate-500">{alert.severity}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+     
 
       <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
